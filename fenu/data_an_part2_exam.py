@@ -1,4 +1,5 @@
-#Exam Exercise Data Analysis
+#Exam Exercise Data Analysis - Part 2
+#Lorenzo Cane - A.A 2024/2025
 #assuming data in file are log_10(E) data where E is in eV
 
 import numpy as np 
@@ -96,7 +97,7 @@ error_counts = np.sqrt(counts) # sqrt(N) as error on number
 error_counts[error_counts == 0] = 1 #avoid 0 error
 
 l = LeastSquares(bin_centers, counts, error_counts, model= power_law) #init least squares
-m = Minuit(l, 1.0e-12,  5 , name=('A', "gamma"))
+m = Minuit(l, 1.0e-22,  2 , name=('A', "gamma"))
 m.migrad()
 m.hesse()
 
@@ -108,7 +109,12 @@ for key, value, error in zip(m.parameters, m.values, m.errors):   #print fit res
 # (e) Years of acquisition for one particle in 10^14 to 10^14.1 eV
 
 bin_width_e = 10 ** 14.1 - 10 ** 14.
-time_required = 1. / (spectrum_flux[np.digitize(14, energy_bins)-1] * detector_surface * bin_width_e) #time for detect one part in s
+bin_index_e = np.digitize(14, energy_bins)-1
+if spectrum_flux[bin_index_e] > 0.0:
+    flux_e = spectrum_flux[bin_index_e]
+else:
+    flux_e = FC_limit(exposure, bin_width_e)
+time_required = 1. / (flux_e * detector_surface * bin_width_e) #time for detect one part in s
 years_required = time_required / (365 * 24 * 3600) #s to years
 print(f"Years required for one particle (in 10^14 to 10^14.1 eV): {years_required:.2f}")
 
