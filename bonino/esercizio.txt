@@ -1,0 +1,11 @@
+Exercise
+Data contained in "Sun data.dat" are related to one day of Sun observations in the microwave range (1GHz = 30 cm).
+The following variables have been selected:
+- exposure time (downsampled to 10 seconds intervals) 
+- flux_1GHz: SFU (Solar Flux Unit) 
+
+Model the data time series.
+
+(Original data: Nobeyama Radio Polarimeters (NoRP)
+http://solar.nro.nao.ac.jp/norp/html/introduction.html)
+
