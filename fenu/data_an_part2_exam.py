@@ -15,6 +15,7 @@ from iminuit.cost import LeastSquares
 data = np.loadtxt('DataSet_Dec2024.txt')  
 E_min = 2.0
 E_max = 15.0
+E_range = np.linspace(10.0**E_min, 10.0**E_max,10000)
 step = 0.1
 high_en_lim = 1.0e12 #eV
 
@@ -93,11 +94,26 @@ print(f"90% FC upper limits (2nd empty bin): {upper_limits[1]: .4e}")
 #---------------------------------------------------------------------------------------------
 # (d) Fit the data to a power law
 
-error_counts = np.sqrt(counts) # sqrt(N) as error on number
-error_counts[error_counts == 0] = 1 #avoid 0 error
+error_flux = np.divide(np.sqrt(counts),exposure) / bin_widths # sqrt(N) as error on counts, exposure and energy bin w/o errors
+error_flux[error_flux == 0] = 1.0e-30 #avoid 0 error
 
-l = LeastSquares(bin_centers, counts, error_counts, model= power_law) #init least squares
-m = Minuit(l, 1.0e-22,  2 , name=('A', "gamma"))
+
+# Filter data for E (if ok)
+mask_en = bin_centers > 10.0**8. 
+mask_counts = counts != 0
+mask = mask_en & mask_counts
+E_filtered = bin_centers[mask]
+flux_filtered = spectrum_flux[mask]
+error_filtered = error_flux[mask]
+
+assert len(bin_centers) == len(spectrum_flux)  #trying to avoid mismatch
+
+l = LeastSquares(E_filtered, flux_filtered, error_filtered, model= power_law) #init least squares
+m = Minuit(l, 1.0e-2,  2.5 , name=('A', "gamma"))
+m.limits["A"] = (1.e-3, 1.e10)
+m.limits["gamma"] = (0.5, 5.)
+#m.errors["A"] = 1e-21
+#m.errors["gamma"] = 0.1
 m.migrad()
 m.hesse()
 
@@ -105,6 +121,56 @@ print("Best fit parameters:\n")
 for key, value, error in zip(m.parameters, m.values, m.errors):   #print fit results
     print(f"{key} : {value:.2e} +- {error:.2e}")
 
+print(m.fmin)
+
+# Plot data and fit
+fitted_model = power_law(E_range, m.values["A"], m.values["gamma"])
+plt.figure(figsize=(8, 6))
+plt.scatter(bin_centers, spectrum_flux, label='Exp. Spectrum')
+plt.plot(E_range, fitted_model, label='Fitted Power Law', color='red')
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel('E [eV]')
+plt.ylabel(r'J(E) [$m^{-2} s^{-1} sr^{-1} eV^{-1} $] ')
+plt.title('Power Law fitted Spectrum')
+#plt.grid(True, which="both", linestyle='--', linewidth=0.5)
+plt.savefig("img/Spectrum_filtered_fitted.pdf")
+
+'''
+#No filter
+assert len(bin_centers) == len(spectrum_flux)  #trying to avoid mismatch
+
+l = LeastSquares(bin_centers, spectrum_flux, error_flux, model= power_law) #init least squares
+m = Minuit(l, 1.0e-2,  2.5 , name=('A', "gamma"))
+m.limits["A"] = (1.e-10, 1.)
+m.limits["gamma"] = (1., 5.)
+#m.errors["A"] = 1e-21
+#m.errors["gamma"] = 0.1
+m.migrad()
+m.hesse()
+
+print("Best fit parameters:\n")
+for key, value, error in zip(m.parameters, m.values, m.errors):   #print fit results
+    print(f"{key} : {value:.2e} +- {error:.2e}")
+
+print(m.fmin)
+
+# Plot data and fit
+fitted_model = power_law(E_range, m.values["A"], m.values["gamma"])
+plt.figure(figsize=(8, 6))
+plt.scatter(bin_centers, spectrum_flux, label='Exp. Spectrum')
+plt.plot(E_range, fitted_model, label='Fitted Power Law', color='red')
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel('E [eV]')
+plt.ylabel(r'J(E) [$m^{-2} s^{-1} sr^{-1} eV^{-1} $] ')
+plt.title('Power Law fitted Spectrum')
+#plt.grid(True, which="both", linestyle='--', linewidth=0.5)
+plt.savefig("img/Spectrum_fitted.pdf")
+'''
+
+J_norm = m.values["A"]*(1.0e8)**(-m.values["gamma"])
+print(f'Normalization at 10^8 eV : {J_norm:.2e}')
 #---------------------------------------------------------------------------------------------
 # (e) Years of acquisition for one particle in 10^14 to 10^14.1 eV
 
