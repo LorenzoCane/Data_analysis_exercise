@@ -36,12 +36,12 @@ plot.ts(flux, main ="Sun Flux at 1GHz", ylab= ("Flux [SFU]"))
 dev.off()
 
 #acf and pacf of the flux
-par(mfrow=c(2,1))
+par(mfrow=c(1,2))
 pdf("img/acf_pacf_flux.pdf", width = 15)
 acf(flux, lag.max = 150, main="ACF of original Flux")
 pacf(flux, lag.max = 150, main = "PACF of original Flux")
 dev.off()
-par(mfrow=c(2,1))
+par(mfrow=c(1,2))
 
 #At this stage (no differenciations) series seems not stationary
 
@@ -252,10 +252,55 @@ ks.test(res4, y = pnorm)
 shapiro.test(res4)
 #not normally distr. for both test#
 
+
+#***************************************************************************
+#Fit ARIMA(1,1,0) model 
+print("****************************************************")
+print("MODEL 5: ARIMA(1,1,1)")
+
+model5 = arima(flux, order=c(1,1,1))
+model5$coef
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#residual analysis for model 4
+res5 <- residuals(model5)
+res5<- res5[2:length(res5)] #avoid strange (possible) behaviour, differencing the 1st res may be artificial
+
+plot.ts(res5, main = "Residuals plot for ARIMA(1,1,1)" , ylab = "Residuals")
+pdf("img/res_arima111.pdf")
+plot.ts(res5, main = "Residuals plot for ARIMA(1,1,1)" , ylab = "Residuals")
+dev.off()
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#acf and pacf of residuals
+par(mfrow=c(2,1))
+pdf("img/acf_pacf_arima111.pdf")
+acf(res5, main = "ACF of Residuals for ARIMA(1,1,1)")
+pacf(res5, main = "PACF of Residuals for ARIMA(1,1,1)")
+dev.off()
+par(mfrow=c(2,1))
+
+#Graphically uncorrelated (now check)
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#Test
+
+#Indipendence test (Box test)
+Box.test(res5, lag = 10, type = "Ljung-Box", fitdf = 3) # seem uncorrelated (p-value = 0.87) at short lags level
+
+#Normality plot + test (Shapiro-Wilk and Kolmogorov-Smirnov)
+pdf("img/qqplot_res_arima111.pdf")
+qqnorm(res5, main = "Normal Q-Q Plot (ARIMA(1,1,1))", xlab = "Th. Quantiles", ylab = "Sample Quantiles")
+qqline(res5, distribution = qnorm, col = "red")
+dev.off()
+
+ks.test(res5, y = pnorm)
+shapiro.test(res5)
+#not normally distr. for both test#
 #***************************************************************************
 #Model Validation through comparison
 #Based on res analysis ARIMA(2,1,2) seems to be the best one (based on L-B test results), residuals plots are all very similar
 
-model5 = arima(flux, order=c(1,1,1))
+
 
 AIC(model1,model2,model3,model4,model5)
