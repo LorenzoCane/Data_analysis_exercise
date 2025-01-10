@@ -88,8 +88,8 @@ for idx in high_en_empty_bins:
     print(f"Empty bin: Energy range ({10**energy_bins[idx]:.1e} - {10**energy_bins[idx + 1]:.1e} ) eV, Bin width: {em_bin_width:.1e} eV")
     upper_limits.append(FC_limit(exposure, em_bin_width)) #upper limit
 
-print(f"90% FC upper limits (1st empty bin): {upper_limits[0]: .4e}")
-print(f"90% FC upper limits (2nd empty bin): {upper_limits[1]: .4e}")
+print(f"90% FC upper limits (1st empty bin): {upper_limits[0]: .4e}" + r' m^{-2} s^{-1} sr^{-1} eV^{-1}  ')
+print(f"90% FC upper limits (2nd empty bin): {upper_limits[1]: .4e}" + r' m^{-2} s^{-1} sr^{-1} eV^{-1}  ')
 
 #---------------------------------------------------------------------------------------------
 # (d) Fit the data to a power law
@@ -133,6 +133,8 @@ plt.yscale('log')
 plt.xlabel('E [eV]')
 plt.ylabel(r'J(E) [$m^{-2} s^{-1} sr^{-1} eV^{-1} $] ')
 plt.title('Power Law fitted Spectrum')
+plt.legend()
+plt.tight_layout()
 #plt.grid(True, which="both", linestyle='--', linewidth=0.5)
 plt.savefig("img/Spectrum_filtered_fitted.pdf")
 
@@ -165,12 +167,14 @@ plt.yscale('log')
 plt.xlabel('E [eV]')
 plt.ylabel(r'J(E) [$m^{-2} s^{-1} sr^{-1} eV^{-1} $] ')
 plt.title('Power Law fitted Spectrum')
+plt.legend()
+plt.tight_layout()
 #plt.grid(True, which="both", linestyle='--', linewidth=0.5)
 plt.savefig("img/Spectrum_fitted.pdf")
 '''
 
 J_norm = m.values["A"]*(1.0e8)**(-m.values["gamma"])
-print(f'Normalization at 10^8 eV : {J_norm:.2e}')
+print(f'Normalization at 10^8 eV : {J_norm:.2e}' + r' m^{-2} s^{-1} sr^{-1} eV^{-1}  ')
 #---------------------------------------------------------------------------------------------
 # (e) Years of acquisition for one particle in 10^14 to 10^14.1 eV
 
@@ -182,7 +186,7 @@ else:
     flux_e = FC_limit(exposure, bin_width_e)
 time_required = 1. / (flux_e * detector_surface * bin_width_e) #time for detect one part in s
 years_required = time_required / (365 * 24 * 3600) #s to years
-print(f"Years required for one particle (in 10^14 to 10^14.1 eV): {years_required:.2f}")
+print(f"Years required for one particle (in 10^14 to 10^14.1 eV): {years_required:.2f} yrs")
 
 #---------------------------------------------------------------------------------------------
 # (f) Impact of detector surface reduction by 30%
