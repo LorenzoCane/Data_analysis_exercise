@@ -74,7 +74,9 @@ bin_index = np.where((energy_bins >= 9.3) & (energy_bins < 9.4))[0] #select corr
 #print(bin_centers[bin_index])
 
 bin_count_b = counts[bin_index[0]] if bin_index.size > 0 else 0
-print(f"Particles in the bin (10^9.3 ; 10^9.4) eV: {bin_count_b}")
+#part_b = bin_count_b / data_time
+part_b = spectrum_flux[bin_index[0]] * diff_angle * detector_surface * bin_widths[bin_index[0]]
+print(f"Particles in the bin (10^9.3 ; 10^9.4) eV: {part_b:.2e}  part/s")
 
 #---------------------------------------------------------------------------------------------
 # (c) 90% FC upper limit for first and second empty bins
@@ -88,8 +90,8 @@ for idx in high_en_empty_bins:
     print(f"Empty bin: Energy range ({10**energy_bins[idx]:.1e} - {10**energy_bins[idx + 1]:.1e} ) eV, Bin width: {em_bin_width:.1e} eV")
     upper_limits.append(FC_limit(exposure, em_bin_width)) #upper limit
 
-print(f"90% FC upper limits (1st empty bin): {upper_limits[0]: .4e}" + r' m^{-2} s^{-1} sr^{-1} eV^{-1}  ')
-print(f"90% FC upper limits (2nd empty bin): {upper_limits[1]: .4e}" + r' m^{-2} s^{-1} sr^{-1} eV^{-1}  ')
+print(f"90% FC upper limits (1st empty bin) [{10**energy_bins[high_en_empty_bins[0]]:.2e}-{10**energy_bins[high_en_empty_bins[1]]:.2e}]: {upper_limits[0]: .4e}" + r' m^{-2} s^{-1} sr^{-1} eV^{-1}  ')
+print(f"90% FC upper limits (2nd empty bin): [{10**energy_bins[high_en_empty_bins[1]]:.2e}-{10**energy_bins[high_en_empty_bins[2]]:.2e} {upper_limits[1]: .4e}" + r' m^{-2} s^{-1} sr^{-1} eV^{-1}  ')
 
 #---------------------------------------------------------------------------------------------
 # (d) Fit the data to a power law
@@ -119,7 +121,7 @@ m.hesse()
 
 print("Best fit parameters:\n")
 for key, value, error in zip(m.parameters, m.values, m.errors):   #print fit results
-    print(f"{key} : {value:.2e} +- {error:.2e}")
+    print(f"{key} : {value:.4e} +- {error:.2e}")
 
 print(m.fmin)
 
@@ -184,7 +186,7 @@ if spectrum_flux[bin_index_e] > 0.0:
     flux_e = spectrum_flux[bin_index_e]
 else:
     flux_e = FC_limit(exposure, bin_width_e)
-time_required = 1. / (flux_e * detector_surface * bin_width_e) #time for detect one part in s
+time_required = 1. / (flux_e * detector_surface * bin_width_e * diff_angle) #time for detect one part in s
 years_required = time_required / (365 * 24 * 3600) #s to years
 print(f"Years required for one particle (in 10^14 to 10^14.1 eV): {years_required:.2f} yrs")
 
@@ -194,8 +196,8 @@ print(f"Years required for one particle (in 10^14 to 10^14.1 eV): {years_require
 broken = 0.3 #broken part
 
 new_surface = detector_surface * (1. - broken)
-new_bin_count_b = counts[bin_index[0]] * new_surface / detector_surface
-print(f"Particles in the bin with 30% reduced detector: {new_bin_count_b}")
+new_bin_count_b = part_b * new_surface / detector_surface
+print(f"Particles in the bin with 30% reduced detector: {new_bin_count_b:.2e} part/s")
 
 #---------------------------------------------------------------------------------------------
 # (g) Impact of 10% energy overestimation
@@ -204,4 +206,5 @@ print(f"Particles in the bin with 30% reduced detector: {new_bin_count_b}")
 counts_shifted, _ = np.histogram(data - np.log10(1.1), bins=energy_bins)
 #counts_shifted = np.divide(counts_shifted, exposure) / bin_widths 
 new_bin_count_g = counts_shifted[bin_index[0]] if bin_index.size > 0 else 0
-print(f"Particles in the bin with 10% energy overestimation: {new_bin_count_g}")
+part_f = new_bin_count_g / data_time
+print(f"Particles in the bin with 10% energy overestimation: {part_f:.2e} part/s")
