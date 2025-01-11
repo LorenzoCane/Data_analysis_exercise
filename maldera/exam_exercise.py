@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 area = 1.0  # m^2 (per plane)
 distance = 0.4  # m (between planes)
 logE_min, logE_max = 2., 6.  # log10(E) energy range
+e_min = 10.**logE_min
+e_max = 10.**logE_max
 nbins = 50
 logE_bin = np.linspace(logE_min, logE_max, nbins)
 plane_width = np.sqrt(area)  # Assuming square planes: 1 m x 1 m
@@ -35,10 +37,11 @@ def simulate_effective_area(theta_deg, Nev=1000000):
     # Project impact points onto the second plane (z = 0.4 m)
     xd = x + (distance / zvett) * xvett
     yd = y + (distance / zvett) * yvett
-
+    print(np.all(yd == y))
     # Generate energies with E^-1 spectrum using inverse transform sampling
     u1 = rng.random(Nev)
-    energies = 10**(logE_min + u1 * (logE_max - logE_min))
+    energies = e_min * np.exp( u1 * np.log(e_max / e_min))
+    #print(energies)
 
     # Energy mask using the hit/miss method
     u5 = rng.random(Nev)
